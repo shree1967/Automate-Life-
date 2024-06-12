@@ -1,14 +1,48 @@
-import pyttsx3,PyPDF2
+from tkinter import *
+from tkinter import filedialog
+from pytube import YouTube
+from moviepy.editor import *
+import shutil
 
-pdfreader = PyPDF2.PdfFileReader(open('machine.pdf','rb'))
-speaker = pyttsx3.init()
+def download():
+    video_path=url_entry.get()
+    file_path=path_label.cget("text")
+    print('Downloading...')
+    mp4=YouTube(video_path).streams.get_highest_resolution().download()
+    video_clip=VideoFileClip(mp4)
 
-for page_num in range(pdfreader.numPages):
-    text=pdfreader.getPage(page_num).extractText()
-    clean_text=text.strip().replace('\n',' ')
-    print(clean_text)
+    audio_file=video_clip.audio
+    audio_file.write_audiofile('audio.mp3')
+    audio_file.close()
+    shutil.move('audio.mp3',file_path)
 
-speaker.save_to_file(clean_text,'record.mp3')
-speaker.runAndWait()
+    video_clip.close()
+    shutil.move(mp4,file_path)
+    print('Download complete ')
 
-speaker.stop()
+def get_path():
+    path=filedialog.askdirectory()
+    path_label.config(text=path)
+
+
+root=Tk()
+root.title('video downloader')
+canvas=Canvas(root,width=400,height=300)
+canvas.pack()
+
+app_label=Label(root,text="Video downloader",fg='blue',font=("Arial",20))
+canvas.create_window(200,20,window=app_label)
+
+url_label=Label(root,text="enter video URL")
+url_entry=Entry(root)
+canvas.create_window(200,80,window=url_label)
+canvas.create_window(200,100,window=url_entry)
+
+path_label=Label(root,text="select path to downloads ")
+path_button=Button(root,text="select",command=get_path)
+canvas.create_window(200,150,window=path_label)
+canvas.create_window(200,170,window=path_button)
+
+download_button=Button(root,text='Download',command=download)
+canvas.create_window(200,250,window=download_button)
+root.mainloop()
